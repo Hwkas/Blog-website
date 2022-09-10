@@ -1,5 +1,6 @@
 # Blog-website
-A Blog website.
+A Blog website
+
 Features: 
    - Any body can see anybody's blog, all the blogs are publically available
    - Any body can Register on the website by simply providing an email & setting up password for the same.
