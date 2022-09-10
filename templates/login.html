@@ -21,12 +21,12 @@
 
   <div class="container">
     <div class="row">
-      {% with message = get_flashed_messages()%}
-        {% if message %}
-          <p>{{ message[0] }}</p>
-        {% endif %}
-      {% endwith %}
       <div class="col-lg-8 col-md-10 mx-auto content">
+        {% with message = get_flashed_messages()%}
+          {% if message %}
+            <p style="text-align: center;">{{ message[0] }}</p>
+          {% endif %}
+        {% endwith %}
         {{ wtf.quick_form(form, novalidate=True, button_map={"submit": "primary"}) }}
       </div>
     </div>

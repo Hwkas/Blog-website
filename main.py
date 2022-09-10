@@ -1,6 +1,3 @@
-from crypt import methods
-import email
-from enum import unique
 from flask import Flask, render_template, redirect, url_for, flash, abort
 from flask_bootstrap import Bootstrap
 from flask_ckeditor import CKEditor
@@ -85,7 +82,7 @@ def register():
     form = RegistrationForm()
     if form.validate_on_submit():
         if User.query.filter_by(email=form.email.data).first():
-            flash("This email if already registered")
+            flash("This email is already registered.")
             return redirect(url_for("login"))
         new_user = User(
             name=form.name.data,
@@ -104,11 +101,13 @@ def register():
 def login():
     form = LoginForm()
     if form.validate_on_submit():
-        user = User.query.filter_by(email=form.email.data)
-        if check_password_hash(user.password, form.password.data):
+        user = User.query.filter_by(email=form.email.data).first()
+        if user and check_password_hash(user.password, form.password.data):
             login_user(user=user)
+            return redirect(url_for("get_all_posts"))
         else:
-            flash("Invalid Credentials")
+            flash("Invalid Credentials.")
+        
     return render_template("login.html", form=form)
 
 
@@ -161,14 +160,12 @@ def edit_post(post_id):
         title=post.title,
         subtitle=post.subtitle,
         img_url=post.img_url,
-        author=post.author,
         body=post.body
     )
     if edit_form.validate_on_submit():
         post.title = edit_form.title.data
         post.subtitle = edit_form.subtitle.data
         post.img_url = edit_form.img_url.data
-        post.author = edit_form.author.data
         post.body = edit_form.body.data
         db.session.commit()
         return redirect(url_for("show_post", post_id=post.id))
