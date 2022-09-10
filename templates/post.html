@@ -1,4 +1,5 @@
 {% include "header.html" %}
+{% import "bootstrap/wtf.html" as wtf%}
 
   <!-- Page Header -->
   <header class="masthead" style="background-image: url('{{post.img_url}}')">
@@ -34,17 +35,22 @@
 
 
 <!--           Comments Area -->
+          {% if current_user.is_authenticated %}
+            {{ wtf.quick_form(form, novalidate=True, button_map={"submit":"primary"})}}
+          {% endif %}
           <div class="col-lg-8 col-md-10 mx-auto comment">
               <ul class="commentList">
-                <li>
-                    <div class="commenterImage">
-                      <img src="https://pbs.twimg.com/profile_images/744849215675838464/IH0FNIXk.jpg"/>
-                    </div>
-                    <div class="commentText">
-                      <p>Some comment</p>
-                      <span class="date sub-text">comment author name</span>
-                    </div>
-                </li>
+                {% for comment in comments %}
+                  <li>
+                      <div class="commenterImage">
+                        <img src="{{ comment.author.email | gravatar }}"/>
+                      </div>
+                      <div class="commentText">
+                        <p>{{ comment.body }}</p>
+                        <span class="date sub-text">{{ comment.author.name }}</span>
+                      </div>
+                  </li>
+                {% endfor %}
               </ul>
             </div>
 

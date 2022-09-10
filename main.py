@@ -6,23 +6,33 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
-from forms import CreatePostForm, RegistrationForm, LoginForm
+from forms import CreatePostForm, RegistrationForm, LoginForm, CommentForm
 from flask_gravatar import Gravatar
 from functools import wraps
+
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 ckeditor = CKEditor(app)
 Bootstrap(app)
 
+
 # CONNECT TO DB
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///blog.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
+login_manager = LoginManager(app)
+gravatar = Gravatar(app,
+                    size=100,
+                    rating='g',
+                    default='retro',
+                    force_default=False,
+                    force_lower=False,
+                    use_ssl=False,
+                    base_url=None)
 
 
 # CONFIGURE TABLES
-
 class User(UserMixin, db.Model):
     __tablename__ = "users"
     id = db.Column(db.Integer, primary_key=True)
@@ -30,6 +40,7 @@ class User(UserMixin, db.Model):
     password = db.Column(db.String(250), nullable=False)
     name = db.Column(db.String(100), nullable=False)
     posts = relationship("BlogPost", backref="author")
+    comments = relationship("Commnet", backref="author")
 
 
 class BlogPost(db.Model):
@@ -41,24 +52,27 @@ class BlogPost(db.Model):
     body = db.Column(db.Text, nullable=False)
     img_url = db.Column(db.String(250), nullable=False)
     author_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    comments = relationship("Commnet", backref="blogpost")
 
 
-db.create_all()
+class Commnet(db.Model):
+    __tablename__ = "comments"
+    id = db.Column(db.Integer, primary_key=True)
+    body = db.Column(db.Text, nullable=False)
+    author_id = db.Column(db.Integer, db.ForeignKey("users.id"))
+    blogpost_id = db.Column(db.Integer, db.ForeignKey("blog_posts.id"))
 
+# the below line needs to be run only for very first to create db
+# db.create_all()
 
-# flask-login
-login_manager = LoginManager(app=app)
 
 # decorator for user_login
-
-
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
 
+
 # decorator for admin only rights
-
-
 def admin_only(function):
     @wraps(function)
     def wrapper(*args, **kwargs):
@@ -94,6 +108,7 @@ def register():
         db.session.commit()
         login_user(user=new_user)
         return redirect(url_for("get_all_posts"))
+
     return render_template("register.html", form=form)
 
 
@@ -107,7 +122,7 @@ def login():
             return redirect(url_for("get_all_posts"))
         else:
             flash("Invalid Credentials.")
-        
+
     return render_template("login.html", form=form)
 
 
@@ -117,10 +132,21 @@ def logout():
     return redirect(url_for('get_all_posts'))
 
 
-@app.route("/post/<int:post_id>")
+@app.route("/post/<int:post_id>", methods=["GET", "POST"])
 def show_post(post_id):
     requested_post = BlogPost.query.get(post_id)
-    return render_template("post.html", post=requested_post)
+    comments = Commnet.query.filter_by(blogpost_id=post_id).all()
+    form = CommentForm()
+    if form.validate_on_submit():
+        new_commnet = Commnet(
+            body=form.body.data,
+            author=current_user,
+            blogpost=requested_post,
+        )
+        db.session.add(new_commnet)
+        db.session.commit()
+        return redirect(url_for("show_post", post_id=post_id))
+    return render_template("post.html", post=requested_post, form=form, comments=comments)
 
 
 @app.route("/about")
@@ -149,6 +175,7 @@ def add_new_post():
         db.session.add(new_post)
         db.session.commit()
         return redirect(url_for("get_all_posts"))
+
     return render_template("make-post.html", form=form)
 
 
