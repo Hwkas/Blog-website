@@ -89,7 +89,7 @@ def admin_only(function):
 @app.route('/')
 def get_all_posts():
     posts = BlogPost.query.all()
-    return render_template("index.html", all_posts=posts)
+    return render_template("index.html", all_posts=posts, year=date.today().year)
 
 
 @app.route('/register', methods=["GET", "POST"])
@@ -110,7 +110,7 @@ def register():
         login_user(user=new_user)
         return redirect(url_for("get_all_posts"))
 
-    return render_template("register.html", form=form)
+    return render_template("register.html", form=form, year=date.today().year)
 
 
 @app.route('/login', methods=["GET", "POST"])
@@ -124,7 +124,7 @@ def login():
         else:
             flash("Invalid Credentials.")
 
-    return render_template("login.html", form=form)
+    return render_template("login.html", form=form, year=date.today().year)
 
 
 @app.route('/logout')
@@ -147,17 +147,17 @@ def show_post(post_id):
         db.session.add(new_commnet)
         db.session.commit()
         return redirect(url_for("show_post", post_id=post_id))
-    return render_template("post.html", post=requested_post, form=form, comments=comments)
+    return render_template("post.html", post=requested_post, form=form, comments=comments, year=date.today().year)
 
 
 @app.route("/about")
 def about():
-    return render_template("about.html")
+    return render_template("about.html", year=date.today().year)
 
 
 @app.route("/contact")
 def contact():
-    return render_template("contact.html")
+    return render_template("contact.html", year=date.today().year)
 
 
 @app.route("/new-post", methods=["GET", "POST"])
@@ -177,7 +177,7 @@ def add_new_post():
         db.session.commit()
         return redirect(url_for("get_all_posts"))
 
-    return render_template("make-post.html", form=form)
+    return render_template("make-post.html", form=form, year=date.today().year)
 
 
 @app.route("/edit-post/<int:post_id>", methods=["GET", "POST"])
@@ -198,7 +198,7 @@ def edit_post(post_id):
         db.session.commit()
         return redirect(url_for("show_post", post_id=post.id))
 
-    return render_template("make-post.html", form=edit_form)
+    return render_template("make-post.html", form=edit_form, year=date.today().year)
 
 
 @app.route("/delete/<int:post_id>")
