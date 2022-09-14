@@ -63,7 +63,7 @@ class Commnet(db.Model):
     blogpost_id = db.Column(db.Integer, db.ForeignKey("blog_posts.id"))
 
 # the below line needs to be run only for very first to create db
-# db.create_all()
+db.create_all()
 
 
 # decorator for user_login
